@@ -8,7 +8,7 @@ class Request {
         $ch = curl_init($opt['url']);
         if ($opt['method'] === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($opt['data']));
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $opt['data']);            
         }
             
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);        

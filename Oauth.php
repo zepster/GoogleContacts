@@ -14,10 +14,10 @@ class Oauth {
             'url' => 'https://www.googleapis.com/oauth2/v4/token',
             'headers' => ["Content-type: application/x-www-form-urlencoded"],
             "method" => 'POST',
-            "data" => [
+            "data" => http_build_query([
                 'grant_type' => self::GRANT_TYPE,
                 'assertion' => $assertion
-            ]
+            ])
         ];
         $response = Request::req($opt);
         if ($response['status'] == 200) {

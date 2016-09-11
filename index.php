@@ -8,7 +8,16 @@ require_once('./Oauth.php');
 use GoogleContacts\Service\Service;
 
 $conf = json_decode(file_get_contents('./conf.json'), TRUE);
+$user = 'aleha@coderip.ru';
+$json = [
+    'name' => 'AlehaTest',
+    'surname' => 'SmirnovTest',
+    'email' => 'aleha@test.com',
+    'phone' => '31231221',
+    'group' => 'test'
+];
 
-$g = new Service($conf);
+$g = new Service($conf, $user);
 $g->getToken();
-$g->testContacts();
+$g->groupExists();
+$g->contactExist();
