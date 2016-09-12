@@ -12,21 +12,24 @@ class Service {
     private $_payload = [];
     private $_oauth = null;
     private $_targetUser = null;
+    private $_contact = [];
     
     //тестовая группа
-    private $_tGroupId = 'http://www.google.com/m8/feeds/groups/aleha%40coderip.ru/base/1fbd2e78f9631d3';
+//    private $_tGroupId = 'http://www.google.com/m8/feeds/groups/aleha%40coderip.ru/base/1fbd2e78f9631d3';
+    private $_tGroupId = null;
 
     /**
      * Принимаем php массив json файла из console google
      * @param array $config
      * @throws Exception
      */
-    public function __construct($config = null, $user) {
+    public function __construct($config = null, $user, $json) {
         if (is_null($config))
             throw new Exception ('Config not found!');
         $this->_config = $config;
         $this->_targetUser = $user;
         $this->_oauth = new Oauth();
+        $this->_contact = $json;
         $this->_preparePayload();
     }
     
@@ -62,32 +65,37 @@ class Service {
     }
     
     public function groupExists() {
+        var_dump("groupExists\n");
+        $q = '"'.$this->_contact['group'].'"';
         $opt = [
-            'url' => 'https://www.google.com/m8/feeds/groups/default/full?alt=json',
+            'url' => 'https://www.google.com/m8/feeds/groups/default/full?alt=json&q='.  urlencode($q),
             'method' => 'GET',
             'headers' => [
                 $this->_oauth->getTokenHeader(),
                 'GData-Version: 3.0',
             ]
         ];
+        
         $response = Request::req($opt);
         if ($response['status'] !== 200) {
-            throw new Exception('Function getGroupId return fail http status');
+            throw new \Exception('Function getGroupId return fail http status');
         }
         $data = json_decode($response['response'], true);
-        if (isset($data['feed']) && $data['feed']['entry']) {
-            foreach ($data['feed']['entry'] as $gr) {
-                if ($gr['title']['$t'] == 'test') {
-                    $this->_tGroupId = $gr['id']['$t'];
-                    continue;
-                }
-            }
+        if ($data['feed']['openSearch$totalResults']['$t'] >= 1) {
+            $this->_tGroupId = $data['feed']['entry'][0]['id']['$t'];
+            var_dump("Exists\n");
+            return true;
         }
+        var_dump("NoExists\n");
+        return false;
     }
     
-    public function contactExist() {        
+    public function contactExist() {
+        var_dump("contactExist\n");
+        $q = '"'. sprintf('%s %s %s', $this->_contact['surname'], $this->_contact['firstname'], $this->_contact['middlename'])
+            .'" '.$this->_contact['phone'].' '.$this->_contact['email'];
         $opt = [
-            'url' => 'https://www.google.com/m8/feeds/contacts/default/full?alt=json&group='.$this->_tGroupId.'&q=test',
+            'url' => 'https://www.google.com/m8/feeds/contacts/default/full?alt=json&q='.urlencode($q),
             'method' => 'GET',
             'headers' => [
                 $this->_oauth->getTokenHeader(),
@@ -99,13 +107,23 @@ class Service {
             throw new \Exception('Function getGroupId return fail http status ('.$response['status'].') '. $response['response']);
         }
         $data = json_decode($response['response'], true);
-        var_dump($data);
+        // точное совпадение/ проверить группу
+        if ($data['feed']['openSearch$totalResults']['$t'] == 1) {
+            if (count($data['feed']['entry'][0]['gContact$groupMembershipInfo']) == 1) {
+                $this->_tGroupId = $data['feed']['entry'][0]['gContact$groupMembershipInfo'][0]['href'];
+                var_dump("contactExist\n");
+                return true;
+            }
+        }
+        var_dump("NOTExist\n");
+        return false;
     }
     
     public function createContact() {
+        var_dump("createContact\n");
         $xml = $this->_createUserXml();
         $opt = [
-            'url' => 'https://www.google.com/m8/feeds/contacts/default/full',
+            'url' => 'https://www.google.com/m8/feeds/contacts/default/full?alt=json',
             'method' => 'POST',
             'headers' => [
                  $this->_oauth->getTokenHeader(),
@@ -118,47 +136,66 @@ class Service {
         var_dump($response);
     }
     
+    public function createGroup() {
+        var_dump("createGroup\n");
+        $xml = $this->_createGroupXml();
+            $opt = [
+            'url' => 'https://www.google.com/m8/feeds/groups/default/full?alt=json',
+            'method' => 'POST',
+            'headers' => [
+                 $this->_oauth->getTokenHeader(),
+                'GData-Version: 3.0',
+                'Content-Type: application/atom+xml',
+            ],
+            'data' => $xml,
+        ];
+        $response = Request::req($opt);
+        if ($response['status'] !== 201) {
+            throw new \Exception('Create new group '. $this->_contact['group'].' failed.');
+        }
+        
+        $data = json_decode($response['response'], true);
+        $this->_tGroupId = $data['entry']['id']['$t'];
+        var_dump($this->_tGroupId);
+        var_dump("create\n");
+    }
+
+    private function _createGroupXml() {
+        $t = '<entry xmlns="http://www.w3.org/2005/Atom"
+       xmlns:gd="http://schemas.google.com/g/2005"
+       gd:etag="&quot;Rno4ezVSLyp7ImA9WxdTEUgNRQU.&quot;">
+    <category scheme="http://schemas.google.com/g/2005#kind"
+              term="http://schemas.google.com/g/2005#group"/>
+    <title>%s</title>
+        </entry>';
+        return sprintf($t, $this->_contact['group']);
+    }
+
+    // заменить на xml 
     private function _createUserXml() {
-        return '<atom:entry xmlns:atom="http://www.w3.org/2005/Atom"
-    xmlns:gd="http://schemas.google.com/g/2005">
-  <atom:category scheme="http://schemas.google.com/g/2005#kind"
-    term="http://schemas.google.com/contact/2008#contact"/>
-  <gd:name>
-     <gd:givenName>Elizabeth</gd:givenName>
-     <gd:familyName>Bennet</gd:familyName>
-     <gd:fullName>Elizabeth Bennet</gd:fullName>
-  </gd:name>
-  <atom:content type="text">Notes</atom:content>
-  <gd:email rel="http://schemas.google.com/g/2005#work"
-    primary="true"
-    address="liz@gmail.com" displayName="E. Bennet"/>
-  <gd:email rel="http://schemas.google.com/g/2005#home"
-    address="liz@example.org"/>
-  <gd:phoneNumber rel="http://schemas.google.com/g/2005#work"
-    primary="true">
-    (206)555-1212
-  </gd:phoneNumber>
-  <gd:phoneNumber rel="http://schemas.google.com/g/2005#home">
-    (206)555-1213
-  </gd:phoneNumber>
-  <gd:im address="liz@gmail.com"
-    protocol="http://schemas.google.com/g/2005#GOOGLE_TALK"
-    primary="true"
-    rel="http://schemas.google.com/g/2005#home"/>
-  <gd:structuredPostalAddress
-      rel="http://schemas.google.com/g/2005#work"
-      primary="true">
-    <gd:city>Mountain View</gd:city>
-    <gd:street>1600 Amphitheatre Pkwy</gd:street>
-    <gd:region>CA</gd:region>
-    <gd:postcode>94043</gd:postcode>
-    <gd:country>United States</gd:country>
-    <gd:formattedAddress>
-      1600 Amphitheatre Pkwy Mountain View
-    </gd:formattedAddress>
-  </gd:structuredPostalAddress>
-  <gContact:groupMembershipInfo href="http://www.google.com/m8/feeds/groups/aleha%40coderip.ru/base/1fbd2e78f9631d3"/>
-</atom:entry>';
+        $t = '<atom:entry xmlns:atom="http://www.w3.org/2005/Atom"
+        xmlns:gd="http://schemas.google.com/g/2005">
+      <atom:category scheme="http://schemas.google.com/g/2005#kind"
+        term="http://schemas.google.com/contact/2008#contact"/>
+      <gd:name>
+         <gd:givenName>%1$s</gd:givenName>
+         <gd:familyName>%2$s</gd:familyName>
+         <gd:additionalName>%3$s</gd:additionalName>
+         <gd:fullName>%4$s</gd:fullName>     
+      </gd:name>
+      <gd:email label="Personal" address="%5$s"/>
+     <gd:phoneNumber label="Personal">%6$s</gd:phoneNumber>
+      <gContact:groupMembershipInfo href="%7$s"/>
+    </atom:entry>';
+        return sprintf($t,
+                $this->_contact['firstname'],
+                $this->_contact['surname'],
+                $this->_contact['middlename'],
+                sprintf('%s %s %s', $this->_contact['surname'], $this->_contact['firstname'], $this->_contact['middlename']),
+                $this->_contact['email'],
+                $this->_contact['phone'],
+                $this->_tGroupId
+            );
     }
     
 }
