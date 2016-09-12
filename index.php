@@ -1,6 +1,6 @@
 <?php
 
-require_once('/jwt/JWT.php');
+require_once('./jwt/JWT.php');
 require_once('./GoogleContacts.php');
 require_once('./Request.php');
 require_once('./Oauth.php');
