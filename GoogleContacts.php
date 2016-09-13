@@ -14,9 +14,12 @@ class Service {
     private $_targetUser = null;
     private $_contact = [];
     
+    // что-то для логов. или дать возможность задать свой под нашим интерфейсом
+    //private $_log = [] || SomeLog();
+    
     //тестовая группа
-//    private $_tGroupId = 'http://www.google.com/m8/feeds/groups/aleha%40coderip.ru/base/1fbd2e78f9631d3';
-    private $_tGroupId = null;
+    private $_tGroupId = null; // куда добавить
+    private $_tCurrentContacts = null; //контакт есть. сохранить для проверки групп
 
     /**
      * Принимаем php массив json файла из console google
@@ -45,30 +48,43 @@ class Service {
         ];
     }
     
+    public function go() {
+        $this->getToken();
+        if (!$this->groupExists()) { 
+            $this->createGroup();
+            $this->createContact();
+        } else {
+           if (!$this->contactExist() || !$this->contactInGroup()) {
+               $this->createContact();
+           }
+        }
+    }
+
     public function getToken() {
         $assertion = JWT::encode($this->_payload, $this->_config['private_key'], 'RS256');
         $this->_oauth->requestToken($assertion);
     }
     
-    public function testContacts(){
-        $opt = [
-            'url' => 'https://www.google.com/m8/feeds/groups/default/full',
-            'method' => 'GET',
-            'headers' => [
-                $this->_oauth->getTokenHeader(),
-                'GData-Version: 3.0',
-            ],
-        ];
-        
-        $response = Request::req($opt);
-        var_dump($response);
+    public function contactInGroup() {
+        var_dump("contactInGroup?\n");
+        foreach ($this->_tCurrentContacts as $contact) {
+            if (isset($contact['gContact$groupMembershipInfo'])) {
+                foreach ($contact['gContact$groupMembershipInfo'] as $group) {
+                    // не удален из группы
+                    if ($group['deleted'] === "false" && $group['href'] == $this->_tGroupId) { 
+                        var_dump("contactInGroup!\n");
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
     
     public function groupExists() {
         var_dump("groupExists\n");
-        $q = '"'.$this->_contact['group'].'"';
         $opt = [
-            'url' => 'https://www.google.com/m8/feeds/groups/default/full?alt=json&q='.  urlencode($q),
+            'url' => 'https://www.google.com/m8/feeds/groups/default/full?alt=json&max-results=999999',
             'method' => 'GET',
             'headers' => [
                 $this->_oauth->getTokenHeader(),
@@ -81,10 +97,12 @@ class Service {
             throw new \Exception('Function getGroupId return fail http status');
         }
         $data = json_decode($response['response'], true);
-        if ($data['feed']['openSearch$totalResults']['$t'] >= 1) {
-            $this->_tGroupId = $data['feed']['entry'][0]['id']['$t'];
-            var_dump("Exists\n");
-            return true;
+        foreach ($data['feed']['entry'] as $group) {
+            if (strtolower($group['title']['$t']) === strtolower($this->_contact['group'])) {
+                $this->_tGroupId = $group['id']['$t'];
+                var_dump("Exist\n");
+                return true;
+            }
         }
         var_dump("NoExists\n");
         return false;
@@ -108,12 +126,10 @@ class Service {
         }
         $data = json_decode($response['response'], true);
         // точное совпадение/ проверить группу
-        if ($data['feed']['openSearch$totalResults']['$t'] == 1) {
-            if (count($data['feed']['entry'][0]['gContact$groupMembershipInfo']) == 1) {
-                $this->_tGroupId = $data['feed']['entry'][0]['gContact$groupMembershipInfo'][0]['href'];
-                var_dump("contactExist\n");
-                return true;
-            }
+        if (count($data['feed']['entry']) != 0) {
+            $this->_tCurrentContacts = $data['feed']['entry'];
+            var_dump("Exist\n");
+            return true;
         }
         var_dump("NOTExist\n");
         return false;
@@ -133,7 +149,6 @@ class Service {
             'data' => $xml,
         ];
         $response = Request::req($opt);
-        var_dump($response);
     }
     
     public function createGroup() {
@@ -170,7 +185,6 @@ class Service {
         </entry>';
         return sprintf($t, $this->_contact['group']);
     }
-
     // заменить на xml 
     private function _createUserXml() {
         $t = '<atom:entry xmlns:atom="http://www.w3.org/2005/Atom"
