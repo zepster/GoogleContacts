@@ -126,7 +126,7 @@ class Service {
         }
         $data = json_decode($response['response'], true);
         // точное совпадение/ проверить группу
-        if (count($data['feed']['entry']) != 0) {
+        if ($data['feed']['openSearch$totalResults']['$t'] != 0) {
             $this->_tCurrentContacts = $data['feed']['entry'];
             var_dump("Exist\n");
             return true;
