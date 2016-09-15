@@ -14,7 +14,7 @@ $service = new Service($service_account_json_key);
 // email пользователя в домене Google Apps, с чьими контактами работаем
 $target_user_email = 'aleha@coderip.ru';
 
-// данные сохраняемого контакта (см. конструктор класса ContactData)
+// данные сохраняемого контакта (см. конструктор)
 $contact_data = new Contact(
 	'dAlehaTest21',
 	'SamirnovTest2',
