@@ -2,7 +2,7 @@
 
 namespace GoogleContacts;
 
-class Contact
+class ContactData
 {
 	private $first_name;
 	private $last_name;

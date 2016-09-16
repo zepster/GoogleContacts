@@ -4,35 +4,60 @@ namespace GoogleContacts;
 
 class Request
 {
-	private $handler;
+	private $url;
+	private $headers = array();
+	private $body;
 
-	public function __construct($url, array $headers = array())
+	public function __construct($url, array $headers = [])
 	{
-		$this->handler = curl_init($url);
-
-		curl_setopt($this->handler, CURLOPT_HTTPHEADER, $headers);
-		curl_setopt($this->handler, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($this->handler, CURLOPT_SSL_VERIFYPEER, false);
+		$this->url = $url;
+		$this->setHeaders($headers);
 	}
 
-	public function setBody($data)
+	public function setHeaders(array $headers)
 	{
-		curl_setopt($this->handler, CURLOPT_POST, true);
-		curl_setopt($this->handler, CURLOPT_POSTFIELDS, $data);
+		if (!empty($this->headers)) {
+			$headers = array_merge($this->headers, $headers);
+		}
+
+		$this->headers = $headers;
 
 		return $this;
 	}
 
-	public function send()
+	public function setBody($data)
 	{
-		$response_data = curl_exec($this->handler);
-		$status_code = curl_getinfo($this->handler, CURLINFO_HTTP_CODE);
+		$this->body = $data;
 
-		if (!$response_data) {
-			throw new \Exception('Request failed: ' . curl_error($this->handler));
+		return $this;
+	}
+
+	public function execute()
+	{
+		$curl = curl_init();
+
+		if (!empty($this->headers)) {
+			curl_setopt($curl, CURLOPT_HTTPHEADER, $this->headers);
 		}
 
-		curl_close($this->handler);
+		curl_setopt($curl, CURLOPT_URL, $this->url);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, false);
+
+		if ($this->body) {
+			curl_setopt($curl, CURLOPT_POST, true);
+			curl_setopt($curl, CURLOPT_POSTFIELDS, $this->body);
+		}
+
+		$response_data = curl_exec($curl);
+		$status_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+		if (!$response_data) {
+			throw new \Exception('Request failed: ' . curl_error($curl));
+		}
+
+		curl_close($curl);
 
 		return new Response($status_code, $response_data);
 	}
