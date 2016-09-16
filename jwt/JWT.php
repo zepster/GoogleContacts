@@ -1,5 +1,10 @@
 <?php
 namespace Firebase\JWT;
+
+require_once 'BeforeValidException.php';
+require_once 'ExpiredException.php';
+require_once 'SignatureInvalidException.php';
+
 use \DomainException;
 use \InvalidArgumentException;
 use \UnexpectedValueException;

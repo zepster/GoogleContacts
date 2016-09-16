@@ -102,9 +102,9 @@ class OAuth
 		);
 
 		if (null !== $this->credentials->target_user_email) {
-			$jwtParams['sub'] = $this->credentials->target_user_email;
+			$jwt_params['sub'] = $this->credentials->target_user_email;
 		}
-
+                
 		return JWT::encode($jwt_params, $this->credentials->private_key, 'RS256');
 	}
 

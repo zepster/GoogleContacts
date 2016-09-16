@@ -8,37 +8,17 @@ class ContactEntry {
     private $last_name;
     private $email;
     private $phone_number;
-    private $group; 
-    
-    function __construct(Contact $contact) {
-        $this->first_name = $contact->get_first_name();
-        $this->last_name = $contact->get_first_name();
-        $this->email = $contact->get_email();
-        $this->phone_number = $contact->get_phone_number();
-        $this->group = new GroupEntry($contact->get_contacts_group_title());
+    private $group_id;     
+  
+    function __construct($first_name, $last_name, $email, $phone_number, $group_id) {
+        $this->first_name = $first_name;
+        $this->last_name = $last_name;
+        $this->email = $email;
+        $this->phone_number = $phone_number;
+        $this->group_id = $group_id;
     }
-    
-    function get_first_name() {
-        return $this->first_name;
-    }
-
-    function get_last_name() {
-        return $this->last_name;
-    }
-
-    function get_email() {
-        return $this->email;
-    }
-
-    function get_phone_number() {
-        return $this->phone_number;
-    }
-
-    function get_group() {
-        return $this->group;
-    }
-    
-    function get_xml() {
+   
+    function getXml() {
         $xml = new \XMLWriter();
         $xml->openMemory();
         $xml->startElement('atom:entry'); 
@@ -51,23 +31,23 @@ class ContactEntry {
         $xml->endElement();
         
         $xml->startElementNS('gd', 'name', null);
-        $xml->writeElementNS ('gd','givenName', null, $this->get_first_name()); 
-        $xml->writeElementNS ('gd','familyName', null, $this->get_last_name()); 
-        $xml->writeElementNS ('gd','fullName', null, $this->get_first_name().' '.$this->get_last_name()); 
+        $xml->writeElementNS ('gd','givenName', null, $this->first_name); 
+        $xml->writeElementNS ('gd','familyName', null, $this->last_name); 
+        $xml->writeElementNS ('gd','fullName', null, $this->first_name.' '.$this->last_name); 
         $xml->endElement();
         
         $xml->startElementNS('gd', 'email', null);
         $xml->writeAttribute('label', 'Personal');
-        $xml->writeAttribute('address', $this->get_email());
+        $xml->writeAttribute('address', $this->email);
         $xml->endElement();
         
         $xml->startElementNS('gd', 'phoneNumber', null);
         $xml->writeAttribute('label', 'Personal');
-        $xml->text($this->get_phone_number());
+        $xml->text($this->phone_number);
         $xml->endElement();
         
         $xml->startElementNS('gContact', 'groupMembershipInfo', null);
-        $xml->writeAttribute('href', 'some group');
+        $xml->writeAttribute('href', $this->group_id);
         $xml->endElement();
         
         $xml->endElement();

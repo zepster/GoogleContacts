@@ -17,7 +17,7 @@ class GroupEntry {
         $this->title = $name;
     }
     
-    function get_xml() {
+    function getXml() {
         $xml = new \XMLWriter();
         $xml->openMemory();
         $xml->startElement('entry');        
