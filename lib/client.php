@@ -2,9 +2,6 @@
 
 namespace GoogleContacts;
 
-use GoogleContacts\GroupEntry;
-use GoogleContacts\ContactEntry;
-
 class Client
 {
 	private $auth;
