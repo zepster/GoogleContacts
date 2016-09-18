@@ -20,8 +20,9 @@ class GroupEntry {
     function getXml() {
         $xml = new \XMLWriter();
         $xml->openMemory();
-        $xml->startElement('entry');        
-        $xml->writeAttribute('xmlns', 'http://www.w3.org/2005/Atom');     
+
+        $xml->startElement('entry');
+        $xml->writeAttribute('xmlns', 'http://www.w3.org/2005/Atom');
         $xml->writeAttribute('xmlns:gd' , 'http://schemas.google.com/g/2005');
         $xml->writeAttribute('gd:etag', '&quot;Rno4ezVSLyp7ImA9WxdTEUgNRQU.&quot;');        
         
@@ -30,10 +31,10 @@ class GroupEntry {
         $xml->writeAttribute('term', 'http://schemas.google.com/g/2005#group');
         $xml->endElement();
         
-        //Только это, остальное обвес
-        $xml->writeElement('title', $this->get_name()); 
+        $xml->writeElement('title', $this->get_name());
         
         $xml->endElement();
+
         return $xml->outputMemory();
     }
     

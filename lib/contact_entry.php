@@ -21,6 +21,7 @@ class ContactEntry {
     function getXml() {
         $xml = new \XMLWriter();
         $xml->openMemory();
+
         $xml->startElement('atom:entry'); 
         $xml->writeAttribute('xmlns:atom', 'http://www.w3.org/2005/Atom');   
         $xml->writeAttribute('xmlns:gd', 'http://schemas.google.com/g/2005');
@@ -33,7 +34,6 @@ class ContactEntry {
         $xml->startElementNS('gd', 'name', null);
         $xml->writeElementNS ('gd','givenName', null, $this->first_name); 
         $xml->writeElementNS ('gd','familyName', null, $this->last_name); 
-        $xml->writeElementNS ('gd','fullName', null, $this->first_name.' '.$this->last_name); 
         $xml->endElement();
         
         $xml->startElementNS('gd', 'email', null);
