@@ -1,15 +1,15 @@
 <?php
 
 require_once 'jwt/JWT.php';
-require_once 'lib/credentials.php';
 require_once 'lib/client.php';
-require_once 'lib/contact_data.php';
+require_once 'lib/credentials.php';
 require_once 'lib/oauth.php';
 require_once 'lib/result.php';
 require_once 'lib/request.php';
 require_once 'lib/response.php';
-require_once 'lib/ContactEntry.php';
-require_once 'lib/GroupEntry.php';
+require_once 'lib/contact_data.php';
+require_once 'lib/contact_entry.php';
+require_once 'lib/group_entry.php';
 
 use GoogleContacts\Credentials;
 use GoogleContacts\Client;
@@ -32,7 +32,7 @@ $contact_data = new ContactData(
 	'Алексей',
 	'Смирнов',
 	'smirnov@test.com',
-	'3123-1231231',
+	'3123-1231232',
 	'izhevsj'
 );
 

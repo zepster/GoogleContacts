@@ -5,9 +5,7 @@ namespace GoogleContacts;
 class Result
 {
 	const STATUS_SUCCESS = 0;
-	const STATUS_ERROR = 1;
-
-	const ERROR_SOME_ERROR = 1;
+	const STATUS_ERROR_SOME_ERROR = 1;
 
 	private $status;
 	private $error_code;
