@@ -127,7 +127,6 @@ class Client
         
         private function createGroup($group_title)
         {
-            $group_id = false;
             $group_entry = new GroupEntry($group_title);
             $request = new Request(
                 'https://www.google.com/m8/feeds/groups/default/full?alt=json',
@@ -141,11 +140,10 @@ class Client
             
             if (201 == $status_code) {
                 $data = json_decode($response_body, true);
-                $group_id = $data['entry']['id']['$t'];
+                return $data['entry']['id']['$t'];
             } else {
                 throw new \Exception($response_body, $status_code);
             }
-            return $group_id;
         }
 
 }
