@@ -13,11 +13,11 @@ class Credentials
 		$service_account_config = json_decode($service_account_json_key, true);
 
 		if (null == $service_account_config) {
-			throw new \Exception ('Could not json decode service account json key');
+			throw new \Exception('Could not decode service account json key');
 		}
 
 		if (!isset($service_account_config['private_key'], $service_account_config['client_email'])) {
-			throw new \Exception ('Invalid service account json key format');
+			throw new \Exception('Invalid service account json key format');
 		}
 
 		$this->private_key = $service_account_config['private_key'];

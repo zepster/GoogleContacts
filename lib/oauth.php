@@ -75,11 +75,11 @@ class OAuth
 			$token_data = json_decode($response_body, true);
 
 			if (null == $token_data) {
-				throw new \Exception ('Could not json decode the token');
+				throw new \Exception('Could not decode the token');
 			}
 
 			if (!isset($token_data['access_token'], $token_data['expires_in'])) {
-				throw new \Exception ('Invalid token format');
+				throw new \Exception('Invalid token format');
 			}
 
 			$this->token = $token_data;
