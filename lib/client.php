@@ -6,14 +6,6 @@ class Client
 {
 	private $auth;
 
-	public function getAuth()
-	{
-		if (!isset($this->auth)) {
-			$this->auth = new OAuth;
-		}
-		return $this->auth;
-	}
-
 	public function setCredentials(Credentials $credentials)
 	{
 		$this->getAuth()->setCredentials($credentials);
@@ -33,7 +25,8 @@ class Client
 			$existing_contact = $this->findContactByAttributes($contact_data, $group_id);
 			if ($existing_contact) {
 				return new Result(Result::STATUS_EXISTS);
-			} elseif ($this->createContact($contact_data, $group_id)) {
+			} else {
+				$this->createContact($contact_data, $group_id);
 				return new Result(Result::STATUS_ADDED);
 			}
 
@@ -42,9 +35,16 @@ class Client
 		}
 	}
 
+	private function getAuth()
+	{
+		if (!isset($this->auth)) {
+			$this->auth = new OAuth;
+		}
+		return $this->auth;
+	}
+
 	private function findGroupIdByTitle($group_title)
 	{
-		$group_id = false;
 		$request = new Request(
 			'https://www.google.com/m8/feeds/groups/default/full?alt=json&max-results=999999',
 			['GData-Version: 3.0']
@@ -58,18 +58,43 @@ class Client
 			$data = json_decode($response_body, true);
 			foreach ($data['feed']['entry'] as $group) {
 				if (strtolower($group['title']['$t']) === strtolower($group_title)) {
-					$group_id = $group['id']['$t'];
+					return $group['id']['$t'];
 				}
 			}
 		} else {
 			throw new \Exception($response_body, $status_code);
 		}
 
-		if (false === $group_id) {
-			$group_id = $this->createGroup($group_title);
-		}
-		return $group_id;
+		return null;
+	}
 
+	private function createGroup($group_title)
+	{
+		$request = new Request(
+			'https://www.google.com/m8/feeds/groups/default/full?alt=json',
+			['GData-Version: 3.0', 'Content-Type: application/atom+xml']
+		);
+
+		$group_entry = new GroupEntry($group_title);
+		$request->setBody($group_entry->getXml());
+
+		$response = $this->getAuth()->authenticatedRequest($request);
+
+		$status_code = $response->getStatusCode();
+		$response_body = $response->getBody();
+
+		if (201 == $status_code) {
+			$data = json_decode($response_body, true);
+			if (null == $data) {
+				throw new \Exception('Could not decode group response');
+			}
+			if (!isset($data['entry']['id']['$t'])) {
+				throw new \Exception('Invalid group response format');
+			}
+			return $data['entry']['id']['$t'];
+		} else {
+			throw new \Exception($response_body, $status_code);
+		}
 	}
 
 	private function findContactByAttributes(ContactData $contact_data, $group_id)
@@ -110,35 +135,6 @@ class Client
 		}
 	}
 
-	private function createGroup($group_title)
-	{
-		$request = new Request(
-			'https://www.google.com/m8/feeds/groups/default/full?alt=json',
-			['GData-Version: 3.0', 'Content-Type: application/atom+xml']
-		);
-
-		$group_entry = new GroupEntry($group_title);
-		$request->setBody($group_entry->getXml());
-
-		$response = $this->getAuth()->authenticatedRequest($request);
-
-		$status_code = $response->getStatusCode();
-		$response_body = $response->getBody();
-
-		if (201 == $status_code) {
-			$data = json_decode($response_body, true);
-			if (null == $data) {
-				throw new \Exception('Could not decode group response');
-			}
-			if (!isset($data['entry']['id']['$t'])) {
-				throw new \Exception('Invalid group response format');
-			}
-			return $data['entry']['id']['$t'];
-		} else {
-			throw new \Exception($response_body, $status_code);
-		}
-	}
-
 	private function createContact(ContactData $contact_data, $group_id)
 	{
 		$contactEntry = new ContactEntry(
@@ -164,7 +160,6 @@ class Client
 		} else {
 			throw new \Exception($response_body, $status_code);
 		}
-
 	}
 
 }
