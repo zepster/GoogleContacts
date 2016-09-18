@@ -22,7 +22,7 @@ class Client
 	public function addContact(ContactData $contact_data)
 	{
             try {
-                $groupId = $this->getGroupIdByName($contact_data->get_contacts_group_title());
+                $groupId = $this->getGroupIdByName($contact_data->getGroupTitle());
                 if (!$this->getContactByGroupId($contact_data, $groupId)) {
                     return $this->createContact($contact_data, $groupId);
                 } else {
@@ -37,10 +37,10 @@ class Client
         private function createContact(ContactData $contact_data, $groupId) 
         {
             $contactEntry = new ContactEntry(
-                    $contact_data->get_first_name(),
-                    $contact_data->get_last_name(),
-                    $contact_data->get_email(),
-                    $contact_data->get_phone_number(),
+                    $contact_data->getFirstName(),
+                    $contact_data->getLastName(),
+                    $contact_data->getEmail(),
+                    $contact_data->getPhoneNumber(),
                     $groupId
             );
             $request = new Request(
@@ -64,7 +64,7 @@ class Client
         
         private function getContactByGroupId(ContactData $contact_data, $groupId) 
         {
-            $q = '"'. sprintf('%s %s', $contact_data->get_first_name(), $contact_data->get_last_name()).'" '.$contact_data->get_phone_number().' '.$contact_data->get_email();
+            $q = '"'. sprintf('%s %s', $contact_data->getFirstName(), $contact_data->getLastName()).'" '.$contact_data->getPhoneNumber().' '.$contact_data->getEmail();
             $url = 'https://www.google.com/m8/feeds/contacts/default/full?alt=json&q='.urlencode($q);
             $request = new Request(
                 $url,
