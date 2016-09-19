@@ -8,40 +8,40 @@ class ContactData
 	private $last_name;
 	private $email;
 	private $phone_number;
-	private $contacts_group_title;
+	private $group_title;
 
-	public function __construct($first_name, $last_name, $email, $phone_number, $contacts_group_title)
+	public function __construct($first_name, $last_name, $email, $phone_number, $group_title)
 	{
 		$this->first_name = $first_name;
 		$this->last_name = $last_name;
 		$this->email = $email;
 		$this->phone_number = $phone_number;
-		$this->contacts_group_title = $contacts_group_title;
+		$this->group_title = $group_title;
 	}
 
-	public function get_first_name()
+	public function getFirstName()
 	{
 		return $this->first_name;
 	}
 
-	public function get_last_name()
+	public function getLastName()
 	{
 		return $this->last_name;
 	}
 
-	public function get_email()
+	public function getEmail()
 	{
 		return $this->email;
 	}
 
-	public function get_phone_number()
+	public function getPhoneNumber()
 	{
 		return $this->phone_number;
 	}
 
-	public function get_contacts_group_title()
+	public function getGroupTitle()
 	{
-		return $this->contacts_group_title;
+		return $this->group_title;
 	}
 
 }
